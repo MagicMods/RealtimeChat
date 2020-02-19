@@ -96,7 +96,7 @@ This is a native iOS Messenger app, with audio/video calls and realtime chat con
 
 ## REQUIREMENTS
 
-- iOS 12.4+
+- iOS 13.0+
 
 ## INSTALLATION
 
