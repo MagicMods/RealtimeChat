@@ -27,8 +27,10 @@ class CallKitProvider: NSObject {
 		super.init()
 
 		let configuration = CXProviderConfiguration(localizedName: "related.chat")
+		configuration.supportsVideo = true
 		configuration.maximumCallGroups = 1
 		configuration.maximumCallsPerCallGroup = 1
+		configuration.includesCallsInRecents = true
 
 		cxprovider = CXProvider(configuration: configuration)
 		cxprovider.setDelegate(self, queue: nil)
@@ -217,6 +219,16 @@ extension CallKitProvider: CXProviderDelegate {
 	}
 
 	// MARK: -
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	func provider(_ provider: CXProvider, perform action: CXStartCallAction) {
+
+		guard let callUUID = UUID(uuidString: action.callUUID.uuidString) else { return }
+
+		client.audioController().configureAudioSessionForCallKitCall()
+
+		provider.reportOutgoingCall(with: callUUID, connectedAt: Date())
+	}
+
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	func provider(_ provider: CXProvider, perform action: CXAnswerCallAction) {
 

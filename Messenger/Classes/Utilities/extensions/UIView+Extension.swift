@@ -9,20 +9,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import FirebaseFirestore
+import UIKit
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-extension Timestamp {
+extension UIView {
 
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	func timestamp() -> Int64 {
+	var parentViewController: UIViewController? {
 
-		return self.seconds * 1000 + Int64(self.nanoseconds / 1000000)
-	}
-
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	class func create(_ timestamp: Int64) -> Timestamp {
-
-		return Timestamp(seconds: timestamp / 1000, nanoseconds: Int32(timestamp % 1000) * 1000000)
+		var parentResponder: UIResponder? = self
+		while (parentResponder != nil) {
+			parentResponder = parentResponder?.next
+			if let viewController = parentResponder as? UIViewController {
+				return viewController
+			}
+		}
+		return nil
 	}
 }

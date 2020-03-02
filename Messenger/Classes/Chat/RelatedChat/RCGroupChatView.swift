@@ -403,14 +403,6 @@ class RCGroupChatView: RCMessagesView, UIGestureRecognizerDelegate {
 		Messages.send(chatId: chatId, text: text, photo: photo, video: video, audio: audio)
 	}
 
-	// MARK: - Message delete methods
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	func messageDelete(_ indexPath: IndexPath) {
-
-		let message = messageAt(indexPath)
-		message.update(isDeleted: true)
-	}
-
 	// MARK: - User actions
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	override func actionTitle() {
@@ -612,7 +604,8 @@ class RCGroupChatView: RCMessagesView, UIGestureRecognizerDelegate {
 	@objc func actionMenuDelete(_ sender: Any?) {
 
 		if let indexPath = RCMenuItem.indexPath(sender as! UIMenuController) {
-			messageDelete(indexPath)
+			let message = messageAt(indexPath)
+			message.update(isDeleted: true)
 		}
 	}
 
@@ -629,6 +622,7 @@ class RCGroupChatView: RCMessagesView, UIGestureRecognizerDelegate {
 		}
 	}
 
+	// MARK: - UISaveVideoAtPathToSavedPhotosAlbum
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	@objc func image(_ image: UIImage, didFinishSavingWithError error: NSError?, contextInfo: UnsafeMutableRawPointer?) {
 

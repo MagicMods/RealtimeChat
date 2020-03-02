@@ -71,6 +71,9 @@ class MKPrivateChatView: MessagesViewController {
 		loadDetails()
 		loadMessages()
 
+		let menuItemForward = UIMenuItem(title: "Forward", action: #selector(MessageCollectionViewCell.forward(_:)))
+		UIMenuController.shared.menuItems = [menuItemForward]
+
 		DispatchQueue.main.async {
 			self.messagesCollectionView.reloadData()
 			self.messagesCollectionView.scrollToBottom()
@@ -114,7 +117,6 @@ class MKPrivateChatView: MessagesViewController {
 		maintainPositionOnKeyboardFrameChanged = true
 
 		messagesCollectionView.refreshControl = refreshControl
-		messagesCollectionView.backgroundColor = .systemBackground
 	}
 
 	//---------------------------------------------------------------------------------------------------------------------------------------------
@@ -417,8 +419,6 @@ class MKPrivateChatView: MessagesViewController {
 		let stickersView = StickersView()
 		stickersView.delegate = self
 		let navController = NavigationController(rootViewController: stickersView)
-		navController.isModalInPresentation = true
-		navController.modalPresentationStyle = .fullScreen
 		present(navController, animated: true)
 	}
 
@@ -428,14 +428,32 @@ class MKPrivateChatView: MessagesViewController {
 		messageSend(text: nil, photo: nil, video: nil, audio: nil)
 	}
 
+	// MARK: - User actions (menu)
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	override func actionMenuDelete(at indexPath: IndexPath) {
+
+		let message = messageAt(indexPath)
+		message.update(isDeleted: true)
+	}
+
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	override func actionMenuForward(at indexPath: IndexPath) {
+
+	}
+
 	// MARK: - Cleanup methods
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	func actionCleanup() {
 
+		audioController.stopAnyOngoingPlaying()
+
 		tokenDetails?.invalidate()
 		tokenMessages?.invalidate()
 
-		audioController.stopAnyOngoingPlaying()
+		details = realm.objects(Detail.self).filter(falsepredicate)
+		messages = realm.objects(Message.self).filter(falsepredicate)
+
+		refreshCollectionView()
 
 		detail?.update(typing: false)
 	}
@@ -451,6 +469,28 @@ class MKPrivateChatView: MessagesViewController {
 			}
 			refreshControl.endRefreshing()
 		}
+	}
+
+	// MARK: - Menu controller methods
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	override func collectionView(_ collectionView: UICollectionView, shouldShowMenuForItemAt indexPath: IndexPath) -> Bool {
+
+		if (isSectionReservedForTypingIndicator(indexPath.section)) { return false }
+
+		selectedIndexPathForMenu = indexPath
+
+		return true
+	}
+
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	override func collectionView(_ collectionView: UICollectionView, canPerformAction action: Selector, forItemAt indexPath: IndexPath, withSender sender: Any?) -> Bool {
+
+		if (isSectionReservedForTypingIndicator(indexPath.section)) { return false }
+
+		if (action == NSSelectorFromString("delete:"))	{ return true }
+		if (action == NSSelectorFromString("forward:"))	{ return true }
+
+		return false
 	}
 }
 
@@ -564,31 +604,48 @@ extension MKPrivateChatView: MessageCellDelegate {
 	}
 
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	func didTapMessage(in cell: MessageCollectionViewCell) {
+	func didTapImage(in cell: MessageCollectionViewCell) {
 
 		if let indexPath = messagesCollectionView.indexPath(for: cell) {
 			let mkmessage = mkmessageAt(indexPath)
 
-			if (mkmessage.mediaStatus == MEDIASTATUS_MANUAL) {
-				if (mkmessage.type == MESSAGE_PHOTO) { MKPhotoLoader.manual(mkmessage, in: messagesCollectionView) }
-				if (mkmessage.type == MESSAGE_VIDEO) { MKVideoLoader.manual(mkmessage, in: messagesCollectionView) }
-				if (mkmessage.type == MESSAGE_AUDIO) { MKAudioLoader.manual(mkmessage, in: messagesCollectionView) }
-			}
-
-			if (mkmessage.mediaStatus == MEDIASTATUS_SUCCEED) {
-				if (mkmessage.type == MESSAGE_PHOTO) {
+			if (mkmessage.type == MESSAGE_PHOTO) {
+				if (mkmessage.mediaStatus == MEDIASTATUS_MANUAL) {
+					MKPhotoLoader.manual(mkmessage, in: messagesCollectionView)
+				}
+				if (mkmessage.mediaStatus == MEDIASTATUS_SUCCEED) {
 					let result = PictureView.photos(messageId: mkmessage.messageId, chatId: chatId)
 					let pictureView = PictureView(photos: result.photoItems, initialPhoto: result.initialPhoto)
 					pictureView.setMessages(messages: true)
 					present(pictureView, animated: true)
 				}
-				if (mkmessage.type == MESSAGE_VIDEO) {
+			}
+
+			if (mkmessage.type == MESSAGE_VIDEO) {
+				if (mkmessage.mediaStatus == MEDIASTATUS_MANUAL) {
+					MKVideoLoader.manual(mkmessage, in: messagesCollectionView)
+				}
+				if (mkmessage.mediaStatus == MEDIASTATUS_SUCCEED) {
 					if let videoItem = mkmessage.videoItem {
 						if let url = videoItem.url {
 							let videoView = VideoView(url: url)
 							present(videoView, animated: true)
 						}
 					}
+				}
+			}
+		}
+	}
+
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	func didTapMessage(in cell: MessageCollectionViewCell) {
+
+		if let indexPath = messagesCollectionView.indexPath(for: cell) {
+			let mkmessage = mkmessageAt(indexPath)
+
+			if (mkmessage.type == MESSAGE_AUDIO) {
+				if (mkmessage.mediaStatus == MEDIASTATUS_MANUAL) {
+					MKAudioLoader.manual(mkmessage, in: messagesCollectionView)
 				}
 			}
 
@@ -629,8 +686,8 @@ extension MKPrivateChatView: MessagesDisplayDelegate {
 	func detectorAttributes(for detector: DetectorType, and message: MessageType, at indexPath: IndexPath) -> [NSAttributedString.Key: Any] {
 
 		switch detector {
-		case .hashtag, .mention: return [.foregroundColor: UIColor.blue]
-		default: return MessageLabel.defaultAttributes
+			case .hashtag, .mention: return [.foregroundColor: UIColor.blue]
+			default: return MessageLabel.defaultAttributes
 		}
 	}
 
@@ -790,7 +847,7 @@ extension MKPrivateChatView: MessagesLayoutDelegate {
 	}
 }
 
-// MARK: - MessageInputBarDelegate
+// MARK: - InputBarAccessoryViewDelegate
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 extension MKPrivateChatView: InputBarAccessoryViewDelegate {
 

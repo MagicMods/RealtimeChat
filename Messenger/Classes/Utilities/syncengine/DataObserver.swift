@@ -85,12 +85,7 @@ class DataObserver: NSObject {
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	private func updateRealm(_ realm: Realm, _ values: [String: Any]) {
 
-		guard let createdAt = values["createdAt"] as? Timestamp else { return }
-		guard let updatedAt = values["updatedAt"] as? Timestamp else { return }
-
 		var temp = values
-		temp["createdAt"] = createdAt.timestamp()
-		temp["updatedAt"] = updatedAt.timestamp()
 
 		temp["neverSynced"] = false
 		temp["syncRequired"] = false

@@ -13,6 +13,7 @@ This is a native iOS Messenger app, with audio/video calls and realtime chat con
 
 ## NEW FEATURES
 
+- CallKit support for audio and video calls
 - Database management is powered by SyncEngine
 - Works with [MessageKit](https://github.com/MessageKit/MessageKit) chat user interface
 - Uses [InputBarAccessoryView](https://github.com/nathantannar4/InputBarAccessoryView) as chat input bar

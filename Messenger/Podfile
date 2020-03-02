@@ -16,7 +16,7 @@ target 'app' do
 	pod 'InputBarAccessoryView'
 	pod 'IQKeyboardManagerSwift'
 	pod 'Kingfisher'
-	pod 'MessageKit'
+	pod 'MessageKit', :git => 'https://github.com/MessageKit/MessageKit.git'
 	pod 'NYTPhotoViewer', '1.2.0'
 	pod 'ProgressHUD'
 	pod 'Reachability'

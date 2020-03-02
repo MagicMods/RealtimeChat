@@ -85,7 +85,7 @@ class DataObservers: NSObject {
 	private func createObserverPerson() {
 
 		let query = Firestore.firestore().collection("Person")
-			.whereField("updatedAt", isGreaterThan: Timestamp.create(Person.lastUpdatedAt()))
+			.whereField("updatedAt", isGreaterThan: Person.lastUpdatedAt())
 		observerPerson = DataObserver(query, to: Person.self)
 	}
 
@@ -187,7 +187,7 @@ class DataObservers: NSObject {
 		for chatId in chatIds {
 			if (observerMessages[chatId] == nil) {
 				let query = Firestore.firestore().collection("Message").whereField("chatId", isEqualTo: chatId)
-					.whereField("updatedAt", isGreaterThan: Timestamp.create(Message.lastUpdatedAt(chatId)))
+					.whereField("updatedAt", isGreaterThan: Message.lastUpdatedAt(chatId))
 				observerMessages[chatId] = DataObserver(query, to: Message.self)
 			}
 		}

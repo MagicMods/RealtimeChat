@@ -15,7 +15,7 @@ import RealmSwift
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 class DataUpdater: NSObject {
 
-	private var name: String = ""
+	private var collection: String = ""
 
 	private var updating = false
 
@@ -26,7 +26,7 @@ class DataUpdater: NSObject {
 
 		super.init()
 
-		self.name = name
+		collection = name
 
 		let predicate = NSPredicate(format: "syncRequired == YES")
 		objects = realm.objects(type).filter(predicate).sorted(byKeyPath: "updatedAt")
@@ -47,27 +47,28 @@ class DataUpdater: NSObject {
 		if (updating) { return }
 
 		if let object = objects?.first {
-			updateObject(object: object)
+			updateObject(object)
 		}
 	}
 
 	// MARK: -
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	private func updateObject(object: SyncObject) {
+	private func updateObject(_ object: SyncObject) {
 
 		updating = true
 
-		let values = populateValues(object: object)
+		var values = populateObject(object)
+		values["updatedAt"] = Date().timestamp()
 
 		if (object.neverSynced) {
-			Firestore.firestore().collection(name).document(object.objectId).setData(values) { error in
+			Firestore.firestore().collection(collection).document(object.objectId).setData(values) { error in
 				if (error == nil) {
 					object.updateSynced()
 				}
 				self.updating = false
 			}
 		} else {
-			Firestore.firestore().collection(name).document(object.objectId).updateData(values) { error in
+			Firestore.firestore().collection(collection).document(object.objectId).updateData(values) { error in
 				if (error == nil) {
 					object.updateSynced()
 				}
@@ -78,59 +79,24 @@ class DataUpdater: NSObject {
 
 	// MARK: -
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	private func populateValues(object: SyncObject) -> [String: Any] {
+	private func populateObject(_ object: SyncObject) -> [String: Any] {
 
 		var values: [String: Any] = [:]
 
 		for property in object.objectSchema.properties {
-			populateValue(object: object, property: property, values: &values)
+			let name = property.name
+			if (name != "neverSynced") && (name != "syncRequired") {
+				switch property.type {
+					case .int:		if let value = object[name] as? Int64	{ values[name] = value }
+					case .bool:		if let value = object[name] as? Bool	{ values[name] = value }
+					case .float:	if let value = object[name] as? Float	{ values[name] = value }
+					case .double:	if let value = object[name] as? Double	{ values[name] = value }
+					case .string:	if let value = object[name] as? String	{ values[name] = value }
+					case .date:		if let value = object[name] as? Date	{ values[name] = value }
+					default:		print("Property type \(property.type.rawValue) is not populated.")
+				}
+			}
 		}
-
-		if (object.neverSynced) {
-			values["createdAt"] = FieldValue.serverTimestamp()
-		} else {
-			values["createdAt"] = Timestamp.create(object.createdAt)
-		}
-
-		values["updatedAt"] = FieldValue.serverTimestamp()
-
-		values.removeValue(forKey: "neverSynced")
-		values.removeValue(forKey: "syncRequired")
-
 		return values
-	}
-
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	private func populateValue(object: SyncObject, property: Property, values: inout [String: Any]) {
-
-		switch property.type {
-			case .int:
-				if let value = object[property.name] as? Int64 {
-					values[property.name] = value
-				}
-			case .bool:
-				if let value = object[property.name] as? Bool {
-					values[property.name] = value
-				}
-			case .float:
-				if let value = object[property.name] as? Float {
-					values[property.name] = value
-				}
-			case .double:
-				if let value = object[property.name] as? Double {
-					values[property.name] = value
-				}
-			case .string:
-				if let value = object[property.name] as? String {
-					values[property.name] = value
-				}
-			case .date:
-				if let value = object[property.name] as? Date {
-					values[property.name] = value
-				}
-			default:
-				print("Property type \(property.type.rawValue) is not populated.")
-				break
-		}
 	}
 }

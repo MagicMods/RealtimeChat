@@ -11,6 +11,7 @@
 
 import RealmSwift
 import ProgressHUD
+import IQKeyboardManagerSwift
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 class EditProfileView: UIViewController {
@@ -58,6 +59,9 @@ class EditProfileView: UIViewController {
 		navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(actionDismiss))
 		navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(actionDone))
 
+		IQKeyboardManager.shared.enable = true
+		IQKeyboardManager.shared.enableAutoToolbar = false
+
 		let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
 		tableView.addGestureRecognizer(gestureRecognizer)
 		gestureRecognizer.cancelsTouchesInView = false
@@ -79,6 +83,8 @@ class EditProfileView: UIViewController {
 	override func viewWillDisappear(_ animated: Bool) {
 
 		super.viewWillDisappear(animated)
+
+		IQKeyboardManager.shared.enable = false
 
 		dismissKeyboard()
 	}

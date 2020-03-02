@@ -406,14 +406,6 @@ class RCPrivateChatView: RCMessagesView, UIGestureRecognizerDelegate {
 		Shortcut.update(userId: recipientId)
 	}
 
-	// MARK: - Message delete methods
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	func messageDelete(_ indexPath: IndexPath) {
-
-		let message = messageAt(indexPath)
-		message.update(isDeleted: true)
-	}
-
 	// MARK: - User actions
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	override func actionTitle() {
@@ -615,7 +607,8 @@ class RCPrivateChatView: RCMessagesView, UIGestureRecognizerDelegate {
 	@objc func actionMenuDelete(_ sender: Any?) {
 
 		if let indexPath = RCMenuItem.indexPath(sender as! UIMenuController) {
-			messageDelete(indexPath)
+			let message = messageAt(indexPath)
+			message.update(isDeleted: true)
 		}
 	}
 
@@ -632,6 +625,7 @@ class RCPrivateChatView: RCMessagesView, UIGestureRecognizerDelegate {
 		}
 	}
 
+	// MARK: - UISaveVideoAtPathToSavedPhotosAlbum
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	@objc func image(_ image: UIImage, didFinishSavingWithError error: NSError?, contextInfo: UnsafeMutableRawPointer?) {
 

@@ -66,6 +66,7 @@ extension MessageContainerView {
 
 		self.activityIndicator?.frame = CGRect(x: 0, y: 0, width: self.frame.width, height: self.frame.height)
 		self.activityIndicator?.style = (self.frame.height > 50) ? .large : .medium
+		self.activityIndicator?.color = .white
 		self.activityIndicator?.startAnimating()
 	}
 
